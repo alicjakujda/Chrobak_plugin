@@ -204,18 +204,18 @@ class TestChrob:
 #         identifier = str(self.dlg.comboBox.itemData(self.dlg.comboBox.currentIndex()))
 #         self.indivLayer = registry.mapLayer(identifier)
         
-    def activeLayer(self):
+    def trueActiveLayer(self):
         layer = self.iface.legendInterface().selectedLayers()[0]
+        return layer
         
     # save shp
     #it doesnt save at all - type problem
     def saveShapefile(self):
-        layer = self.activeLayer()
+        layer = self.trueActiveLayer()
         outputDir = self.dlg.lineEdit.text() + "/Chrobak/"
          # create directory if it doesn't exist
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
-        print layer.type
         #type = 0 -> VectorLayer
         if layer.type() == 0:
             writer = QgsVectorFileWriter.writeAsVectorFormat( layer, outputDir + layer.name() + ".shp", "utf-8", layer.crs(), "ESRI Shapefile")
