@@ -24,6 +24,7 @@ from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon, QFileDialog
 from qgis.core import QgsVectorFileWriter, QgsMapLayerRegistry
 from qgis.utils import *
+from ChrobakGener import chrobak
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
@@ -204,6 +205,7 @@ class TestChrob:
 #         identifier = str(self.dlg.comboBox.itemData(self.dlg.comboBox.currentIndex()))
 #         self.indivLayer = registry.mapLayer(identifier)
         
+        
     def trueActiveLayer(self):
         layer = self.iface.legendInterface().selectedLayers()[0]
         return layer
@@ -212,11 +214,15 @@ class TestChrob:
     #it doesnt save at all - type problem
     def saveShapefile(self):
         layer = self.trueActiveLayer()
-        outputDir = self.dlg.lineEdit.text() + "/Chrobak/"
+#        outputDir = self.dlg.lineEdit.text() + "/Chrobak/"
+        #temporary, during tests
+        outputDir = '/home/alicja/Pulpit/Chrobak4/'
+        print outputDir
          # create directory if it doesn't exist
         if not os.path.exists(outputDir):
             os.makedirs(outputDir)
         #type = 0 -> VectorLayer
+        print layer.type
         if layer.type() == 0:
             writer = QgsVectorFileWriter.writeAsVectorFormat( layer, outputDir + layer.name() + ".shp", "utf-8", layer.crs(), "ESRI Shapefile")
             if writer == QgsVectorFileWriter.NoError:
@@ -247,11 +253,10 @@ class TestChrob:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             # pass
-            
-            outputDir = self.dlg.lineEdit.text()
-            
-            if not os.path.exists(outputDir):
-                self.iface.messageBar().pushMessage("No such directory", "Choose an existing directory to save the layers in.", 1, 5)
-            if os.path.exists(outputDir):
-                self.saveShapefile()
+            #listVertex = chrobak().readVertex(self.trueActiveLayer())
+            listSegments = chrobak().segmantation(self.trueActiveLayer())
+            print listSegments
+            self.saveShapefile()
+                                    
+
             
