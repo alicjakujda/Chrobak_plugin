@@ -22,9 +22,9 @@
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon, QFileDialog
-from qgis.core import QgsVectorFileWriter, QgsMapLayerRegistry
+from qgis.core import *
 from qgis.utils import *
-from ChrobakGener import chrobak
+from ChrobakGener import line
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
@@ -253,9 +253,21 @@ class TestChrob:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             # pass
-            #listVertex = chrobak().readVertex(self.trueActiveLayer())
-            listSegments = chrobak().segmantation(self.trueActiveLayer())
-            print listSegments
+            features = self.trueActiveLayer().getFeatures()
+            for current, feature in enumerate(features):
+                geom = feature.geometry()
+                if geom.isEmpty() is False:
+                    listSegments = line(geom).segmantation()
+                    #print listSegments
+                    lineCoef = line(geom).segmentDefinition(listSegments[0], listSegments[1])
+                    print lineCoef
+                    geomSegment = line(geom).geometryOfSegment(listSegments[0], listSegments[1])
+                    print geomSegment
+                    geomSegment2 = line(geom).geometryOfSegment(listSegments[1], listSegments[2])
+                    print geomSegment2
+                    intersection = line(geom).segmentIntersection(geomSegment, geomSegment2)
+                    print intersection
+
             self.saveShapefile()
                                     
 
