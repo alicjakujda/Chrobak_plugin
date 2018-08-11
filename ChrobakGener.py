@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from qgis.core import *
 from qgis.utils import *
+from math import sqrt
 
 class line():
     
@@ -17,16 +18,9 @@ class line():
                 
         return listOfSegments
     
-    #pewnie usunę bo nie jest identyczne jak od szombary
-    def lineCentroid(self):
-        centroid = []
-        centroid.append(self.geometria.centroid().asPoint().x())
-        centroid.append(self.geometria.centroid().asPoint().y())
-        return centroid
-    
     #ok 237 metrów różnicy między funkcjami
     #przerobić!!!!!!
-    def SzmobiCentroid(self):
+    def lineCentroid(self):
         A = 0.0
         sc = 0.0
         sc_sum = 0.0
@@ -52,7 +46,6 @@ class line():
         
         return segment
     
-    #muszę się zastanowić czy potrzebuję podziału na współczynniki
     def segmentDefinition(self, startPoint, endPoint):
         A = startPoint[1] - endPoint[1]
         B = endPoint[0] - startPoint[0]
@@ -60,9 +53,75 @@ class line():
         
         return [A, B, C]
 
+    #intersekcja musi być oparta na współczynnikach lini, ponieważ nie zawsze obiekty się przecinają geometrycznie ale w przestrzeni tak
     def segmentIntersection(self, firstLine, secondLine):
 
-        intersectionPoint = QgsGeometry.intersection(firstLine, secondLine).asPoint()
+        if firstLine[0] == 0 and (firstLine[1] == 0 or secondLine[1] == 0) and (firstLine[2] != secondLine[2]):
+            intersectionPointX = - secondLine[2] / secondLine[0]
+            intersectionPointY = - firstLine[2] / firstLine[1]
+            
+        elif secondLine[0] == 0 and (firstLine[1] == 0 or secondLine[1] == 0) and (firstLine[2] != secondLine[2]):
+            intersectionPointX = - firstLine[2] / firstLine[0]
+            intersectionPointY = - secondLine[2] / secondLine[1]
+            
+        elif (firstLine[0], secondLine[0]) == (0, 0) or (firstLine[1], secondLine[1]) == (0, 0):
+            intersectionPointX = None
+            intersectionPointY = None
+            print "Parallel lines"
+            
+        else:
+
+            intersectionPointX = (firstLine[1]*secondLine[2]-secondLine[1]*firstLine[2])/(firstLine[0]*secondLine[1]-secondLine[0]*firstLine[1])
+            intersectionPointY = - (secondLine[0]*firstLine[2]-firstLine[0]*secondLine[2])/(firstLine[1]*secondLine[0]-secondLine[1]*firstLine[0])
+            
+        intersectionPoint = [QgsPoint(intersectionPointX, intersectionPointY)]
+        
         return intersectionPoint
     
+    #stworzyć funkcję w klasie linia z numeracją punktów - jeżeli będzie pierscien to wtedy będzie inna kolejność
+    
+    #stworzyć funkcję w klasie linia dla pierscienia - jeżeli true to wtedy funkcja z numeracją będzie dla pierscienia
+
+
+#nie testowany
+def epsylon(scale, chosenType):
+    if chosenType == 'angular':
+        return (scale/1000) * 0.4
+    else:
+        return (scale/1000) * 0.6
+
+#nie testpwany
+def variablesForTriangle(scale, widthLineOnMap,chosenType):
+    
+    coeficiants = {}
+    
+    if chosenType == 'oval':
+        coeficiants['triangleBase'] = 0.7
+        coeficiants['traiangleHight'] = 0.3
+        coeficiants['triangleS0'] = 0.1
+        
+    elif chosenType == 'oval2':
+        coeficiants['triangleBase'] = 0.6
+        coeficiants['traiangleHight'] = 0.3
+        coeficiants['triangleS0'] = 0.1
+        
+    elif chosenType == 'angular':
+        coeficiants['triangleBase'] = 0.4
+        coeficiants['traiangleHight'] = 0.4
+        coeficiants['triangleS0'] = 0.1
+        
+    hightOut = coeficiants['traiangleHight'] + coeficiants['triangleS0']
+    d1 = coeficiants['triangleS0'] * ( coeficiants['traiangleHight'] / coeficiants['triangleBase'] )
+    d2 = sqrt( d1**2 + (coeficiants['triangleS0']/2)**2 )
+    hightIns = hightOut - d2 - (coeficiants['triangleS0']/2)
+    baseIns = hightIns * (coeficiants['triangleBase'] / coeficiants['traiangleHight'])
+    db = coeficiants['triangleBase'] - baseIns
+    dbWithWidthLineOnMap = db * (widthLineOnMap/coeficiants['triangleS0'])
+    d2WithWidthLineOnMap = d2 * (widthLineOnMap/coeficiants['triangleS0'])
+    baseWithWidthLineOnMap = (baseIns + dbWithWidthLineOnMap) * (scale / 1000)
+    hightOutWithWidthLineOnMap = (hightIns + d2WithWidthLineOnMap + (widthLineOnMap/2)) * (scale / 1000)
+    armOutWithWidthLineOnMap = sqrt( hightOutWithWidthLineOnMap**2 + (baseWithWidthLineOnMap/2)**2 )
+    valuables = [chosenType, baseWithWidthLineOnMap, hightOutWithWidthLineOnMap, armOutWithWidthLineOnMap]
+
+    return valuables
     
