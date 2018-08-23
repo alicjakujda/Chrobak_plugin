@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from qgis.core import *
 from qgis.utils import *
-from math import sqrt
+from math import *
 
 class line():
     
@@ -20,26 +20,27 @@ class line():
     
     #ok 237 metrów różnicy między funkcjami
     #przerobić!!!!!!
-    def lineCentroid(self):
-        A = 0.0
-        sc = 0.0
+    def lineCentroid(self, pointsOfLine):
+                
+#         A = 0.0
+#         sc = 0.0
+#         cx = 0.0
+#         cy = 0.0
         sc_sum = 0.0
-        cx = 0.0
-        cy = 0.0
         cx_sum = 0.0
         cy_sum = 0.0
-        for i in range(len(self.segmantation())-1):        
-            sc = ((self.segmantation()[i][0]*self.segmantation()[i+1][1]) - (self.segmantation()[i+1][0]*self.segmantation()[i][1]))
-            cx = ( self.segmantation()[i][0] + self.segmantation()[i+1][0]) * sc
-            cy = ( self.segmantation()[i][1] + self.segmantation()[i+1][1]) * sc
+        for i in range(len(pointsOfLine)-1):        
+            sc = ((pointsOfLine[i][0]*pointsOfLine[i+1][1]) - (pointsOfLine[i+1][0]*pointsOfLine[i][1]))
+            cx = ( pointsOfLine[i][0] + pointsOfLine[i+1][0]) * sc
+            cy = ( pointsOfLine[i][1] + pointsOfLine[i+1][1]) * sc
             sc_sum = sc_sum + sc
             cx_sum = cx_sum + cx
             cy_sum = cy_sum + cy
         A = sc_sum/2
-        centr_x = cx_sum * ( 1/ (6*A))
-        centr_y = cy_sum * ( 1/ (6*A))
+        centroidX = cx_sum * ( 1/ (6*A))
+        centroidY = cy_sum * ( 1/ (6*A))
     
-        return [centr_x, centr_y]
+        return [centroidX, centroidY]
     
     def geometryOfSegment(self, startPoint, endPoint):
         segment = QgsGeometry.fromPolyline([QgsPoint(startPoint), QgsPoint(endPoint)])
@@ -52,6 +53,10 @@ class line():
         C = endPoint[1]*startPoint[0] - startPoint[1]*endPoint[0]
         
         return [A, B, C]
+    
+    def distancePointToLine(self, point, segmentDefinition):
+        distance = abs(segmentDefinition[0]*point[0]+segmentDefinition[1]*point[1]+segmentDefinition[2]) / sqrt(segmentDefinition[0]**2+segmentDefinition[1]**2)
+        return distance
 
     #intersekcja musi być oparta na współczynnikach lini, ponieważ nie zawsze obiekty się przecinają geometrycznie ale w przestrzeni tak
     def segmentIntersection(self, firstLine, secondLine):
@@ -77,11 +82,44 @@ class line():
         intersectionPoint = [QgsPoint(intersectionPointX, intersectionPointY)]
         
         return intersectionPoint
-    
-    #stworzyć funkcję w klasie linia z numeracją punktów - jeżeli będzie pierscien to wtedy będzie inna kolejność
+
     
     #stworzyć funkcję w klasie linia dla pierscienia - jeżeli true to wtedy funkcja z numeracją będzie dla pierscienia
-
+    def ringData(self, pointsOfLine, pointOfCentroid):
+        if pointsOfLine[0] == pointsOfLine[-1]:
+            distanceToCentroid = []
+            for point in pointsOfLine:
+                dist = sqrt(point.sqrDist(*pointOfCentroid))
+                distanceToCentroid.append(dist)
+            maxDistance = max(distanceToCentroid)
+            indexPoint = distanceToCentroid.index(maxDistance)
+            return [indexPoint, maxDistance]
+        
+    #stworzyć funkcję w klasie linia z numeracją punktów - jeżeli będzie pierscien to wtedy będzie inna kolejność
+    def numerationOfPoints(self, pointsOfLine, indexPointOfRing):
+        if indexPointOfRing is not None and indexPointOfRing != 0:
+            newPointsOfLine = pointsOfLine[indexPointOfRing:] + pointsOfLine[1:indexPointOfRing+1]
+            return newPointsOfLine
+        
+    #brak opcji z większą ilością punktów o tej samej odległości od centr, min odl od centr oraz max nie są używane później nigdzie - może później jakoś się usunie
+    #stworzyć funkcję obliczającą index i wartość odl punktu najdalszego - może się przydać!
+    #przetestowac!
+    def findLocalExtremumInRing(self, pointsOfRing, pointOfCentroid):
+        if pointsOfRing[0] == pointsOfRing[-1]:
+            distanceToFirstPoint = []
+            for point in pointsOfRing[1:-2]:
+                dist = sqrt(point.sqrDist(*pointsOfRing[0]))
+                distanceToFirstPoint.append(dist)
+            maxDistance = max(distanceToFirstPoint)
+            indexPoint = distanceToFirstPoint.index(maxDistance)+1
+            lineFromExtremumToFirstPoint = self.segmentDefinition(pointsOfRing[indexPoint], pointsOfRing[0])
+            minDistanceFromCentrToLine = self.distancePointToLine(pointOfCentroid, lineFromExtremumToFirstPoint)
+            return [indexPoint, pointsOfRing[indexPoint], maxDistance]
+        
+    
+                
+                
+        
 
 #nie testowany
 def epsylon(scale, chosenType):
@@ -121,7 +159,7 @@ def variablesForTriangle(scale, widthLineOnMap,chosenType):
     baseWithWidthLineOnMap = (baseIns + dbWithWidthLineOnMap) * (scale / 1000)
     hightOutWithWidthLineOnMap = (hightIns + d2WithWidthLineOnMap + (widthLineOnMap/2)) * (scale / 1000)
     armOutWithWidthLineOnMap = sqrt( hightOutWithWidthLineOnMap**2 + (baseWithWidthLineOnMap/2)**2 )
-    valuables = [chosenType, baseWithWidthLineOnMap, hightOutWithWidthLineOnMap, armOutWithWidthLineOnMap]
+    variables = [chosenType, baseWithWidthLineOnMap, hightOutWithWidthLineOnMap, armOutWithWidthLineOnMap]
 
-    return valuables
+    return variables
     
