@@ -17,7 +17,8 @@ class line():
                 listOfSegment = {
                                   "index" : point,
                                   "x" : vertices[point][0],
-                                  "y" : vertices[point][1]
+                                  "y" : vertices[point][1],
+                                  "ifPointStayAfterGeneralization" : False
                                   }
                 listOfSegments.append(listOfSegment)
                 listOfSegment = []
@@ -297,6 +298,7 @@ def chrobakGeneralization(features, scale, widthLineOnMap, type):
             
             listSegments = line(geom).segmantation()
             print "listSegments: " + str(listSegments)
+            
        
 #             for i in range(0,len(listSegments)-2):
 #                 lineCoef = line(geom).segmentDefinition(listSegments[i], listSegments[9])
@@ -316,7 +318,7 @@ def chrobakGeneralization(features, scale, widthLineOnMap, type):
                 print "ring: " + str(ring)
                 print "listSegments: " + str(listSegments)
                 print "listIndex: " + str(listIndex)
-            
+
             stopIteration = False
             levelOfListIndex = 0
             
@@ -330,6 +332,11 @@ def chrobakGeneralization(features, scale, widthLineOnMap, type):
                          
                     startPoint = listSegments[(listIndex[levelOfListIndex][i][0])]
                     endPoint = listSegments[(listIndex[levelOfListIndex][i][1])]
+                    
+                    #points of listIndex stay after generalization
+                    listSegments[(listIndex[levelOfListIndex][i][0])]["ifPointStayAfterGeneralization"] = True
+                    listSegments[(listIndex[levelOfListIndex][i][1])]["ifPointStayAfterGeneralization"] = True
+                    
                     
                     print "startPoint: " + str(startPoint)
                     print "endPoint: " + str(endPoint)
@@ -382,23 +389,53 @@ def chrobakGeneralization(features, scale, widthLineOnMap, type):
                                 pointExtremum = point
                                 sumOfExtremumArms = armFromPointToBegin + armFromPointToEnd
                             
-                            #duble maximum values
+                            #double maximum values
                             elif arrow == maxArrow:
                                 sumOfExtremumArmsDuringDoubleMax = armFromPointToBegin + armFromPointToEnd
                                 distanceBetweenExtremums = line(geom).distanceOfPoints(pointExtremum, point)
                                 
                                 #to get the sum in one condition or not?
-                                if distanceBetweenExtremums < widthLineOnMap:
+                                if distanceBetweenExtremums < widthLineOnMap and sumOfExtremumArms < sumOfExtremumArmsDuringDoubleMax:
+                                    maxArrow = arrow
+                                    pointExtremum = point
+                                    sumOfExtremumArms = sumOfExtremumArmsDuringDoubleMax
                                     
-                                pointExtremumDuringDoubleMax
+                                else:
+                                    maxArrow = arrow                                 
+                                    pointExtremumDuringDoubleMax = pointExtremum
+                                    pointExtremum = point
+                                    sumOfExtremumArms = sumOfExtremumArmsDuringDoubleMax
                                 
-                                
+                if bool(pointExtremum):
 
+                    if len(listIndex) == levelOfListIndex + 1:
+                        listIndex.append([])
+                    
+                    if bool(pointExtremumDuringDoubleMax):
+                        listIndex[(levelOfListIndex + 1)].append([startPoint["index"], pointExtremumDuringDoubleMax["index"]])
+                        listIndex[(levelOfListIndex + 1)].append([pointExtremumDuringDoubleMax["index"], pointExtremum["index"]])
+                        listIndex[(levelOfListIndex + 1)].append([pointExtremum["index"], endPoint["index"]])
+                        pointExtremumDuringDoubleMax = {}
                         
+                    else:
+                        listIndex[(levelOfListIndex + 1)].append([startPoint["index"], pointExtremum["index"]])
+                        listIndex[(levelOfListIndex + 1)].append([pointExtremum["index"], endPoint["index"]])
+                        
+                else:
+                    point["ifPointStayAfterGeneralization"] = True
+                
+                print "new listIndex: " + str(listIndex)
+                    
+                if (i == len(listIndex[levelOfListIndex]) - 1) and (len(listIndex) == levelOfListIndex + 1):
+                    stopIteration = True
+
+                            
+
+                levelOfListIndex +=1     
 
 
-                stopIteration = True
-            
+#                 stopIteration = True
+                print "after all listSegments: " + str(listSegments)
             
 #             if ring is not None:
 #                 numeration = line(geom).numerationOfPoints(listSegments, ring[0])
