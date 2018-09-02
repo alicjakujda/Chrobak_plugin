@@ -255,46 +255,8 @@ class TestChrob:
             # substitute with your code.
             # pass
             features = self.trueActiveLayer().getFeatures()
-            for current, feature in enumerate(features):
-                geom = feature.geometry()
-                if geom.isEmpty() is False:
-                    
-                    listSegments = line(geom).segmantation()
-                    print listSegments
-                    centr = line(geom).lineCentroid(listSegments)
-                    print "centr" + str(centr)
-                    
-                    for i in range(0,len(listSegments)-2):
-                        lineCoef = line(geom).segmentDefinition(listSegments[i], centr)
-#                         print lineCoef
-                        distance = line(geom).distancePointToLine(listSegments[i],lineCoef)
-                        print distance
-                    
-                    
-                    ring = line(geom).ringData(listSegments, centr)
-                    print ring
-                    if ring is not None:
-                        numeration = line(geom).numerationOfPoints(listSegments, ring[0])
-                        print numeration
-                        localExtremum = line(geom).findLocalExtremumInRing(numeration, centr)
-                        print "localExtremum " + str(localExtremum)
-                        
-
-    #                     geomSegment = line(geom).geometryOfSegment(listSegments[0], listSegments[1])
-    #                     print geomSegment
-    #                     geomSegment2 = line(geom).geometryOfSegment(listSegments[4], listSegments[5])
-    #                     print geomSegment2
-#                         lineCoef2 = line(geom).segmentDefinition(listSegments[i+1], listSegments[i+2])
-#                         print lineCoef2
-#                         intersection = line(geom).segmentIntersection(lineCoef, lineCoef2)
-#                         print "line" + str(i) + ", " + str(i+1)
-#                         print intersection
-#                         chosenTypeOval = variablesForTriangle(1000000, 0.1 ,"oval")
-#                         print chosenTypeOval
-#                         chosenTypeOval2 = variablesForTriangle(1000000, 0.1 ,"oval2")
-#                         print chosenTypeOval2
-#                         chosenTypeAngle = variablesForTriangle(1000000, 0.1 ,"angular")
-#                         print chosenTypeAngle
+            chrobak = chrobakGeneralization(features, 1000000, 0.4, "armAsBase")
+            print chrobak
             self.saveShapefile()
                                     
 
