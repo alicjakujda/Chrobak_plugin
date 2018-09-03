@@ -1,0 +1,3 @@
+#test printing
+def printing(text):
+  print " --- " + str(text) + "---"
